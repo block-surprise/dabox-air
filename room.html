@@ -6,82 +6,130 @@
     <title>Photo & Text Chat</title>
     <style>
         body { font-family: sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #075e54; color: white; padding: 10px; text-align: center; font-size: 1.2em; }
+        header { background: #075e54; color: white; padding: 10px; text-align: center; font-size: 1.2em; position: sticky; top: 0; z-index: 10; }
         #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* 吹き出しスタイル */
         .msg { background: white; padding: 8px 12px; border-radius: 10px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; display: block; min-height: 50px; background: #eee; }
+        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; display: block; cursor: pointer; background: #f0f0f0; }
         .msg .time { font-size: 0.7em; color: #888; text-align: right; margin-top: 4px; }
+        
         footer { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid #ccc; }
-        input[type="text"] { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
-        .btn { background: #128c7e; color: white; border: none; padding: 10px 15px; border-radius: 50%; cursor: pointer; font-size: 1.2em; }
+        input[type="text"] { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ccc; outline: none; font-size: 16px; }
+        .send-btn { background: #128c7e; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         input[type="file"] { display: none; }
+        .camera-btn { font-size: 1.6em; cursor: pointer; }
+
+        /* パスワード入力画面（モーダル） */
+        #passModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 80%; max-width: 300px; }
+        .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 18px; text-align: center; }
+        .modal-content button { width: 100%; padding: 12px; background: #075e54; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <header id="roomTitle">Chat Room</header>
-    <div id="chat-area"></div>
-    <footer>
-        <label style="cursor:pointer; font-size:1.5em;">📷<input type="file" id="fileInput" accept="image/*" onchange="send('img')"></label>
-        <input type="text" id="textInput" placeholder="メッセージを入力...">
-        <button class="btn" onclick="send('text')">➤</button>
-    </footer>
+
+<div id="passModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">パスワードを入力</h3>
+        <input type="password" id="passInput" placeholder="••••••" autocomplete="off">
+        <button onclick="checkPass()">入室する</button>
+    </div>
+</div>
+
+<header id="roomTitle">読み込み中...</header>
+<div id="chat-area"></div>
+
+<footer>
+    <label class="camera-btn">📷<input type="file" id="fileInput" accept="image/*" onchange="send('img')"></label>
+    <input type="text" id="textInput" placeholder="メッセージを入力..." autocomplete="off">
+    <button class="send-btn" onclick="send('text')">➤</button>
+</footer>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwfn5LpxrsqAo79xZBjxqfblWQ5kuHShn1FqLBjx7dQWJ6D568FjS-Gk6sZziQ1ycaPhg/exec";
     const urlParams = new URLSearchParams(window.location.search);
     const roomID = urlParams.get('id');
-    let password = prompt("パスワードを入力");
+    let password = "";
+
+    if(!roomID) window.location.href = "index.html";
+    document.getElementById('modalTitle').innerText = `「${roomID}」のパスワード`;
+
+    // パスワード確定処理
+    function checkPass() {
+        password = document.getElementById('passInput').value;
+        if(!password) return alert("パスワードを入力してください");
+        document.getElementById('passModal').style.display = 'none';
+        document.getElementById('roomTitle').innerText = "部屋: " + roomID;
+        refresh();
+        setInterval(refresh, 4000); // 4秒おきに自動更新開始
+    }
 
     async function send(type) {
         const textInput = document.getElementById('textInput');
         const fileInput = document.getElementById('fileInput');
+        const statusHeader = document.getElementById('roomTitle');
         let payload = { roomID, password, text: textInput.value };
 
         if (type === 'img' && fileInput.files[0]) {
+            statusHeader.innerText = "画像を送信中...";
             const reader = new FileReader();
             reader.onload = async (e) => {
                 payload.img = e.target.result.split(',')[1];
                 payload.name = fileInput.files[0].name;
-                await post(payload);
+                await postData(payload);
+                fileInput.value = ""; 
             };
             reader.readAsDataURL(fileInput.files[0]);
-        } else if (textInput.value) {
-            await post(payload);
+        } else if (type === 'text' && textInput.value.trim() !== "") {
+            statusHeader.innerText = "送信中...";
+            await postData(payload);
             textInput.value = "";
         }
     }
 
-    async function post(payload) {
-        document.getElementById('roomTitle').innerText = "送信中...";
-        await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-        document.getElementById('roomTitle').innerText = "部屋: " + roomID;
-        refresh();
+    async function postData(payload) {
+        try {
+            const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.text();
+            if(result === "パスワードが違います") {
+                alert("パスワードが違います");
+                location.reload(); // 再入力させる
+            }
+            document.getElementById('roomTitle').innerText = "部屋: " + roomID;
+            refresh();
+        } catch(e) {
+            alert("送信エラー");
+        }
     }
 
     let lastHash = "";
     async function refresh() {
         try {
-            const res = await fetch(`${GAS_URL}?room=${roomID}&pass=${password}`);
+            const res = await fetch(`${GAS_URL}?room=${encodeURIComponent(roomID)}&pass=${encodeURIComponent(password)}`);
             const data = await res.json();
-            if (data.error) { alert("パス間違い"); window.location.href="index.html"; }
             
-            if (JSON.stringify(data) === lastHash) return;
-            lastHash = JSON.stringify(data);
+            if (data.error) {
+                alert("パスワードが違います。ホームに戻ります。");
+                window.location.href = "index.html";
+                return;
+            }
+            
+            const currentHash = JSON.stringify(data);
+            if (currentHash === lastHash) return;
+            lastHash = currentHash;
 
             const area = document.getElementById('chat-area');
             area.innerHTML = data.map(m => `
                 <div class="msg">
-                    ${m.text ? `<div>${m.text}</div>` : ""}
-                    ${m.url ? `<img src="${m.url}" loading="lazy" onerror="this.src='https://via.placeholder.com/150?text=Loading...'">` : ""}
+                    ${m.text ? `<div style="word-break: break-all;">${m.text}</div>` : ""}
+                    ${m.url ? `<img src="${m.url}" onclick="window.open(this.src)" title="クリックで拡大">` : ""}
                     <div class="time">${m.time}</div>
                 </div>
             `).join("");
             area.scrollTop = area.scrollHeight;
         } catch(e) {}
     }
-
-    setInterval(refresh, 3000);
-    refresh();
 </script>
 </body>
 </html>
