@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>写真を受け取り</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+        #photoFrame { margin-top: 20px; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 100%; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>届いた写真</h2>
+    <p id="msg">新しい写真を待っています...</p>
+    <div id="photoFrame">
+        <img id="latestImg" src="">
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxqTMadGYXKioUbdJ3hFcFCnLqOSOt3OrvVCHi_zFBIeaCk0DKqZfZRrc1j3VzsapdEIw/exec";
+        let lastUrl = "";
+
+        function check() {
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.url && data.url !== lastUrl) {
+                        document.getElementById('latestImg').src = data.url;
+                        document.getElementById('photoFrame').style.display = "block";
+                        document.getElementById('msg').innerText = "新しい写真が届きました！";
+                        lastUrl = data.url;
+                    }
+                });
+        }
+
+        // 5秒おきに「新しい写真ある？」と確認しに行く
+        setInterval(check, 5000);
+    </script>
+</body>
+</html>
