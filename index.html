@@ -4,26 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Chat Home</title>
-    
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f6; }
-        .box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        input { display: block; width: 100%; margin: 10px 0; padding: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background: #f4f7f6; 
+        }
+        .box { 
+            background: white; 
+            padding: 40px 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            text-align: center; 
+            width: 90%; 
+            max-width: 350px; 
+        }
+        h2 { color: #075e54; margin-bottom: 20px; }
+        p { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        
+        /* 部屋名入力：伏せ字 (password) 設定 */
+        input { 
+            display: block; 
+            width: 100%; 
+            margin: 15px 0; 
+            padding: 12px; 
+            box-sizing: border-box; 
+            border: 2px solid #ddd; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            outline: none; 
+            transition: border-color 0.3s; 
+            text-align: center;
+        }
+        input:focus { border-color: #128c7e; }
+        
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #128c7e; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: background 0.3s; 
+        }
+        button:hover { background: #075e54; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2>Photo Chat</h2>
-        <input type="text" id="roomName" placeholder="部屋の名前（例: travel）" autocomplete="off">
+        <p>秘密の部屋名を入力してください</p>
+        
+        <input type="password" id="roomName" placeholder="部屋の名前を入力" autocomplete="off" onkeydown="if(event.key==='Enter') enterRoom()">
+        
         <button onclick="enterRoom()">入室する</button>
     </div>
 
     <script>
+        // ページ読み込み時に自動で入力欄にカーソルを合わせる
+        window.onload = () => { document.getElementById('roomName').focus(); };
+
         function enterRoom() {
             const name = document.getElementById('roomName').value;
-            if(!name) return alert("部屋名を入れてね");
-            // room.htmlに部屋名をくっつけて移動する
+            if(!name) {
+                alert("部屋名を入力してください");
+                return;
+            }
+            // room.html に部屋名をパラメータとして渡して移動
             window.location.href = `room.html?id=${encodeURIComponent(name)}`;
         }
     </script>
