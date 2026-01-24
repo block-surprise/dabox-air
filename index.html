@@ -3,50 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Box Home</title>
+    <title>Photo Chat Home</title>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-        .container {
-            text-align: center;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        h1 { color: #333; margin-bottom: 30px; }
-        .menu-button {
-            display: block;
-            width: 200px;
-            margin: 15px auto;
-            padding: 15px;
-            text-decoration: none;
-            color: white;
-            border-radius: 10px;
-            font-weight: bold;
-            transition: transform 0.2s, opacity 0.2s;
-        }
-        .send-btn { background-color: #007bff; }
-        .receive-btn { background-color: #28a745; }
-        .menu-button:hover { transform: translateY(-3px); opacity: 0.9; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f4f7f6; }
+        .box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        input { display: block; width: 100%; margin: 10px 0; padding: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div class="box">
+        <h2>Photo Chat</h2>
+        <p>部屋名を入力して入室</p>
+        <input type="text" id="roomName" placeholder="部屋の名前（例: travel）">
+        <button onclick="enterRoom()">入室する</button>
+    </div>
 
-<div class="container">
-    <h1>📸 Photo Box</h1>
-    <p>どちらに進みますか？</p>
-    
-    <a href="send.html" class="menu-button send-btn">写真を送る</a>
-    <a href="receive.html" class="menu-button receive-btn">写真を見る</a>
-</div>
-
+    <script>
+        function enterRoom() {
+            const name = document.getElementById('roomName').value;
+            if(!name) return alert("部屋名を入れてね");
+            // room.htmlに部屋名をくっつけて移動する
+            window.location.href = `room.html?id=${encodeURIComponent(name)}`;
+        }
+    </script>
 </body>
 </html>
