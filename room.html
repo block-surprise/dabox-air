@@ -8,19 +8,14 @@
         body { font-family: sans-serif; margin: 0; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; }
         header { background: #075e54; color: white; padding: 10px; text-align: center; font-size: 1.2em; position: sticky; top: 0; z-index: 10; }
         #chat-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* 吹き出しスタイル */
         .msg { background: white; padding: 8px 12px; border-radius: 10px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; display: block; cursor: pointer; background: #f0f0f0; }
+        .msg img { max-width: 100%; border-radius: 5px; margin-top: 5px; display: block; cursor: pointer; background: #f0f0f0; min-height: 100px; }
         .msg .time { font-size: 0.7em; color: #888; text-align: right; margin-top: 4px; }
-        
         footer { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid #ccc; }
         input[type="text"] { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ccc; outline: none; font-size: 16px; }
         .send-btn { background: #128c7e; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         input[type="file"] { display: none; }
         .camera-btn { font-size: 1.6em; cursor: pointer; }
-
-        /* パスワード入力画面（モーダル） */
         #passModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; text-align: center; width: 80%; max-width: 300px; }
         .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 18px; text-align: center; }
@@ -32,7 +27,7 @@
 <div id="passModal">
     <div class="modal-content">
         <h3 id="modalTitle">パスワードを入力</h3>
-        <input type="password" id="passInput" placeholder="••••••" autocomplete="off">
+        <input type="password" id="passInput" placeholder="••••••" autocomplete="off" onkeydown="if(event.key==='Enter') checkPass()">
         <button onclick="checkPass()">入室する</button>
     </div>
 </div>
@@ -42,7 +37,7 @@
 
 <footer>
     <label class="camera-btn">📷<input type="file" id="fileInput" accept="image/*" onchange="send('img')"></label>
-    <input type="text" id="textInput" placeholder="メッセージを入力..." autocomplete="off">
+    <input type="text" id="textInput" placeholder="メッセージを入力..." autocomplete="off" onkeydown="if(event.key==='Enter') send('text')">
     <button class="send-btn" onclick="send('text')">➤</button>
 </footer>
 
@@ -55,14 +50,13 @@
     if(!roomID) window.location.href = "index.html";
     document.getElementById('modalTitle').innerText = `「${roomID}」のパスワード`;
 
-    // パスワード確定処理
     function checkPass() {
         password = document.getElementById('passInput').value;
-        if(!password) return alert("パスワードを入力してください");
+        if(!password) return;
         document.getElementById('passModal').style.display = 'none';
         document.getElementById('roomTitle').innerText = "部屋: " + roomID;
         refresh();
-        setInterval(refresh, 4000); // 4秒おきに自動更新開始
+        setInterval(refresh, 4000);
     }
 
     async function send(type) {
@@ -83,8 +77,9 @@
             reader.readAsDataURL(fileInput.files[0]);
         } else if (type === 'text' && textInput.value.trim() !== "") {
             statusHeader.innerText = "送信中...";
-            await postData(payload);
-            textInput.value = "";
+            const msg = textInput.value;
+            textInput.value = ""; // 先に空にする（連続送信防止）
+            await postData({ ...payload, text: msg });
         }
     }
 
@@ -94,7 +89,7 @@
             const result = await res.text();
             if(result === "パスワードが違います") {
                 alert("パスワードが違います");
-                location.reload(); // 再入力させる
+                location.reload();
             }
             document.getElementById('roomTitle').innerText = "部屋: " + roomID;
             refresh();
@@ -108,25 +103,28 @@
         try {
             const res = await fetch(`${GAS_URL}?room=${encodeURIComponent(roomID)}&pass=${encodeURIComponent(password)}`);
             const data = await res.json();
-            
-            if (data.error) {
-                alert("パスワードが違います。ホームに戻ります。");
-                window.location.href = "index.html";
-                return;
-            }
+            if (data.error) { window.location.href = "index.html"; return; }
             
             const currentHash = JSON.stringify(data);
             if (currentHash === lastHash) return;
             lastHash = currentHash;
 
             const area = document.getElementById('chat-area');
-            area.innerHTML = data.map(m => `
+            area.innerHTML = data.map(m => {
+                // 画像URLを直接表示可能な形式に強制変換
+                let imgHtml = "";
+                if(m.url) {
+                    const fileId = m.url.split('id=')[1];
+                    const directUrl = `https://lh3.googleusercontent.com/u/0/d/${fileId}`;
+                    imgHtml = `<img src="${directUrl}" onclick="window.open('${m.url}')" onerror="this.src='${m.url}'">`;
+                }
+                return `
                 <div class="msg">
                     ${m.text ? `<div style="word-break: break-all;">${m.text}</div>` : ""}
-                    ${m.url ? `<img src="${m.url}" onclick="window.open(this.src)" title="クリックで拡大">` : ""}
+                    ${imgHtml}
                     <div class="time">${m.time}</div>
-                </div>
-            `).join("");
+                </div>`;
+            }).join("");
             area.scrollTop = area.scrollHeight;
         } catch(e) {}
     }
