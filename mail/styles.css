@@ -50,3 +50,8 @@ body.has-bg .main{background-size:cover;background-position:center center;backgr
   body.has-bg .main{background-attachment:scroll}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* iOS Safari: keep form controls at 16px to prevent focus zoom. */
+input, textarea, select, button { font-size: max(16px, 1em); }
+.search input { font-size: 16px; }
