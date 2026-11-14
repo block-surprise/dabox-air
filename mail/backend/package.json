@@ -1,0 +1,16 @@
+{
+  "name": "mailbox-cloud-api",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {"node": ">=20"},
+  "scripts": {"start": "node server.js"},
+  "dependencies": {
+    "@google-cloud/firestore": "^7.11.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "firebase-admin": "^13.0.2",
+    "imapflow": "^1.0.162",
+    "mailparser": "^3.7.2",
+    "nodemailer": "^6.10.1"
+  }
+}
