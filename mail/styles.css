@@ -51,7 +51,13 @@ body.has-bg .main{background-size:cover;background-position:center center;backgr
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
-
-/* iOS Safari: keep form controls at 16px to prevent focus zoom. */
-input, textarea, select, button { font-size: max(16px, 1em); }
-.search input { font-size: 16px; }
+/* Mobile sidebar: keep every navigation item reachable on short screens. */
+@media(max-width:640px){
+  .sidebar{height:100vh;height:100dvh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;align-items:stretch}
+  .sidebar-bottom{margin-top:22px;flex:0 0 auto}
+  #mainNav{flex:0 0 auto}
+  .account-list{flex:0 0 auto}
+  .profile{margin-bottom:4px}
+}
+#mailbox-logout-setting{margin-top:4px;padding-bottom:2px}
+#mailbox-auth-logout{font:inherit;cursor:pointer}

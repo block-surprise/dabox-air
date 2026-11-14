@@ -7,11 +7,11 @@ import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification,
   signOut, GoogleAuthProvider, OAuthProvider, signInWithRedirect,
-  getRedirectResult
+  getRedirectResult, updateProfile
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8',
+  apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1t8',
   authDomain: 'koyomi-96cd7.firebaseapp.com',
   projectId: 'koyomi-96cd7',
   storageBucket: 'koyomi-96cd7.firebasestorage.app',
@@ -36,7 +36,7 @@ gate.innerHTML = `
 #mailbox-auth-gate button.secondary{background:#eef4fa;color:#456078}#mailbox-auth-gate button:disabled{opacity:.55}
 #mailbox-auth-gate .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}#mailbox-auth-gate .status{min-height:22px;font-size:12px;color:#a04444;white-space:pre-wrap}
 #mailbox-auth-gate .small{font-size:11px;color:#8494a5}#mailbox-auth-gate .hidden{display:none!important}
-#mailbox-auth-logout{position:fixed;right:12px;top:12px;z-index:9999;border:1px solid #dce5ee;background:white;color:#40566b;border-radius:9px;padding:8px 12px;font-size:12px}
+#mailbox-auth-logout{display:block;width:100%;min-height:42px;margin:8px 0 0;padding:10px 14px;border:1px solid #e7caca;border-radius:10px;background:#fff7f7;color:#a34b4b;font-size:13px;font-weight:650;text-align:center}#mailbox-auth-logout.hidden{display:none!important}
 </style>
 <div class="panel">
  <h1>MailBox</h1><p>メールボックスにログインしてください。</p>
@@ -53,14 +53,7 @@ gate.innerHTML = `
  <div id="mb-auth-message" class="status" role="status"></div>
  <p class="small">新規登録後、確認メールが届く場合があります。</p>
 </div>`;
-function mountAuthUi() {
-  if (!document.body.contains(gate)) document.body.append(gate);
-}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountAuthUi, { once: true });
-} else {
-  mountAuthUi();
-}
+document.addEventListener('DOMContentLoaded', () => document.body.append(gate));
 
 const errorText = (e) => ({
   'auth/invalid-email':'メールアドレスの形式を確認してください。',
@@ -87,35 +80,26 @@ const apple = new OAuthProvider('apple.com'); apple.addScope('email'); apple.add
 $('#mb-apple',gate).onclick=()=>run(()=>providerRedirect(apple));
 
 getRedirectResult(auth).catch(e=>status(errorText(e)));
-let logout=document.createElement('button');logout.id='mailbox-auth-logout';logout.textContent='ログアウト';logout.className='hidden';logout.onclick=()=>run(()=>signOut(auth));
-function mountLogout() {
-  if (!document.body.contains(logout)) document.body.append(logout);
+let logout=document.createElement('button');logout.id='mailbox-auth-logout';logout.type='button';logout.textContent='ログアウト';logout.className='hidden';logout.onclick=()=>run(()=>signOut(auth));
+function placeLogout(){
+  const settingsBody=document.querySelector('#settingsModal .settings-body');
+  if(!settingsBody)return;
+  let group=document.querySelector('#mailbox-logout-setting');
+  if(!group){group=document.createElement('div');group.id='mailbox-logout-setting';group.className='setting-group';group.innerHTML='<h3>アカウント</h3><p class="tiny muted">MailBoxからログアウトします。</p>';settingsBody.append(group);}
+  group.append(logout);
 }
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountLogout, { once: true });
-} else {
-  mountLogout();
-}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',placeLogout,{once:true});else placeLogout();
 
 onAuthStateChanged(auth, async user=>{
-  mountAuthUi();
-  mountLogout();
+  if(!document.body.contains(gate)) document.body.append(gate);
   gate.classList.toggle('hidden',!!user);
+  placeLogout();
   logout.classList.toggle('hidden',!user);
   if(user){
-    window.mailboxAuth = {
-      user,
-      uid: user.uid,
-      email: user.email || '',
-      getIdToken: () => user.getIdToken()
-    };
-    const profileName = document.querySelector('.profile b');
-    const profileCaption = document.querySelector('.profile small');
-    if (profileName) profileName.textContent = user.displayName || user.email || 'MailBoxユーザー';
-    if (profileCaption) profileCaption.textContent = user.emailVerified ? 'ログイン中' : 'メールアドレス未確認';
-    window.dispatchEvent(new CustomEvent('mailbox-auth-changed', { detail: { user, uid: user.uid } }));
+    window.mailboxAuth={user,getIdToken:()=>user.getIdToken(),uid:user.uid};
+    window.dispatchEvent(new CustomEvent('mailbox-auth-changed',{detail:{user,uid:user.uid}}));
   }else{
-    window.mailboxAuth = null;
-    window.dispatchEvent(new CustomEvent('mailbox-auth-changed', { detail: { user: null } }));
+    window.mailboxAuth=null;
+    window.dispatchEvent(new CustomEvent('mailbox-auth-changed',{detail:{user:null}}));
   }
 });
