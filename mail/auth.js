@@ -11,13 +11,13 @@ import {
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8',
-  authDomain: 'koyomi-96cd7.firebaseapp.com',
-  projectId: 'koyomi-96cd7',
-  storageBucket: 'koyomi-96cd7.firebasestorage.app',
-  messagingSenderId: '237812391840',
-  appId: '1:237812391840:web:c90d8873c053f634cb0ec5',
-  measurementId: 'G-NZSLBRWPYX'
+  apiKey: "AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8",
+  authDomain: "koyomi-96cd7.firebaseapp.com",
+  projectId: "koyomi-96cd7",
+  storageBucket: "koyomi-96cd7.firebasestorage.app",
+  messagingSenderId: "237812391840",
+  appId: "1:237812391840:web:c90d8873c053f634cb0ec5",
+  measurementId: "G-NZSLBRWPYX"
 };
 
 const app = initializeApp(firebaseConfig);
