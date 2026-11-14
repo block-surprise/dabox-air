@@ -1,0 +1,14 @@
+{
+  "name": "mailbox-yahoo-local",
+  "version": "0.2.0",
+  "private": true,
+  "description": "MailBox local Yahoo! JAPAN Mail connector",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "imapflow": "^1.0.162",
+    "nodemailer": "^6.10.1",
+    "mailparser": "^3.7.2",
+    "dotenv": "^16.4.7"
+  }
+}
