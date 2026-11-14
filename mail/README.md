@@ -1,72 +1,46 @@
-# MailBox — Yahoo! JAPAN Mail 接続版
+# MailBox — GitHub Pages UI修正版
 
-淡い水色テーマのメールクライアントUIに、Yahoo! JAPANメール（`@yahoo.co.jp` / `@ymail.ne.jp`）のIMAP受信・SMTP送信を追加したローカル開発版です。
+## 今回の修正
+- iPhoneの入力時ズームを抑える設定（viewport、16px入力欄、touch-action）
+- モバイルのハンバーガーメニューに閉じるボタンと背景タップで閉じる操作を追加
+- メール作成・アカウント追加などのモーダルを開くとメニューを自動で閉じる
+- 上部バー・検索欄・テーマアイコンを選択中のテーマカラーに連動
+- 背景写真の上にかかる色味をテーマカラーに連動
+- 右上の何もしない「M」アイコンを削除
+- メニューの迷惑メール・ゴミ箱などのアイコンを統一したSVGアイコンに変更
+- メールが少ない場合もコンテンツ領域を画面下部まで伸ばし、背景写真が下まで見えるよう調整
+- iPhoneの画面下部セーフエリアに対応
 
-## できること
+## GitHub Pagesへの配置
+このZIPの中身（`index.html`、`styles.css`、`app.js`、`manifest.webmanifest`など）を、GitHubリポジトリの公開対象フォルダの直下に置いてください。
 
-- Yahoo!メールのIMAP/SMTP接続テスト
-- Yahoo!アカウントの複数登録・解除
-- 受信トレイの最新50件のヘッダー取得
-- メール本文（テキスト）の表示
-- Yahoo!メールからの送信
-- Yahoo!接続パスワードをAES-256-GCMで暗号化してローカル保存
-- 既存のテーマカラー・写真・ライト/ダーク設定
+1. GitHubで対象リポジトリを開く
+2. ZIPを展開し、中身をリポジトリのルートにアップロード
+3. `Settings` → `Pages` を開く
+4. `Deploy from a branch` を選択
+5. ブランチを `main`、フォルダを `/ (root)` にして保存
+6. 公開URLをiPhoneのSafariで開く
 
-Gmail・Outlookはまだデモ表示で、実接続されていません。Yahoo!の送信済みフォルダへの同期、既読/スター変更、添付ファイル、フォルダ一覧、検索サーバー連携も次段階です。
+## Yahoo!メールについての重要な注意
+GitHub PagesはHTML/CSS/JavaScriptを配信する静的ホスティングです。Node.jsの`server.js`を実行できません。そのため、GitHub Pagesに置いただけではYahoo!メールのIMAP/SMTP接続は動作しません。
 
-## Yahoo!側で先に必要な設定
+Yahoo!メールの実接続には、IMAP/SMTP通信と認証情報を安全に扱うバックエンドが別途必要です。現在同梱している`server.js`はローカルPCでの単一ユーザー開発用で、GitHub Pagesからの公開接続や複数ユーザー向けの認証機能はありません。**このまま一般公開サーバーへ配置しないでください。** 認証・ユーザー分離・CORS許可リスト・レート制限・安全な秘密情報管理を追加してから、バックエンドを別途ホスティングしてください。
 
-1. Yahoo!メールにログインします。
-2. 設定から「IMAP/POP/SMTPアクセス」を開きます。
-3. 「Yahoo! JAPAN公式サービス以外からのアクセス」を許可し、IMAP・POP・SMTPをそれぞれ利用する設定にします。
-4. Yahoo!公式の案内に従ってください: https://support.yahoo-net.jp/PccMail/s/article/H000007321
+## ローカルでYahoo!メールを試す場合
+Node.js 20以降が必要です。
 
-**重要:** Yahoo! JAPANは、IMAP/POP/SMTPのパスワード認証には不正利用・アカウント乗っ取りのリスクがあるとして、公式サービスの利用を推奨しています。外部メールソフトの利用を許可する前に、Yahoo!の注意事項を必ず確認してください。IMAP/SMTPを使うための条件として、Yahoo!ダイレクトオファーへの登録が必要となる場合もあります。設定画面の案内に従ってください。
+1. `npm install`
+2. `.env.example` を `.env` にコピー
+3. `MAILBOX_ENCRYPTION_KEY` に64桁の16進数キーを設定
+   - 生成例: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+4. `npm start`
+5. `http://127.0.0.1:8787` を開く
 
-この実装はYahoo! JAPANの通常メール（`@yahoo.co.jp`、`@ymail.ne.jp`）向けです。`@ybb.ne.jp` などYahoo! BB系アドレスはサーバー設定が異なるため、現時点では対象外です。
+このローカル版はローカルPCでの動作確認用です。iPhoneから同じPC上のバックエンドへ接続するには、別途ネットワーク設定が必要です。
 
-## 起動方法（Windows / macOS / Linux）
-
-Node.js 20以降を用意してください。
-
-1. このフォルダでターミナルを開きます。
-2. 依存関係をインストールします。
-
-```bash
-npm install
-```
-
-3. `.env.example` を `.env` にコピーします。
-4. 暗号化キーを生成します。
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-5. 表示された64文字の16進数を `.env` の `MAILBOX_ENCRYPTION_KEY` に設定します。
-6. サーバーを起動します。
-
-```bash
-npm start
-```
-
-7. ブラウザで `http://127.0.0.1:8787` を開きます。
-8. 「アカウントを追加」→「Yahoo!メール」から接続します。
-
-**暗号化キーは必ず同じ値を使い続けてください。** キーを失うと保存済みYahoo!アカウントのパスワードを復号できません。.envとdataフォルダは他人に共有しないでください。
-
-## セキュリティ上の制限
-
-- この版は個人PC上で動かすローカル開発用です。サーバーは `127.0.0.1` のみで待ち受けます。
-- `.env` の暗号化キーと `data/yahoo-accounts.json` の暗号化済み認証情報は厳重に保護してください。
-- このままインターネットに公開したり、`HOST=0.0.0.0` に変更したりしないでください。ログイン機能、ユーザー分離、CSRF対策、HTTPS終端、監査・レート制限などを備えた本番用バックエンドが別途必要です。
-- iPhoneなど別端末から実メールを使うには、認証とHTTPSを備えたサーバーへの安全な配置が必要です。このローカル版はPC内での接続テストを想定しています。
-- Yahoo!のパスワードをチャットや第三者に送らないでください。MailBoxの接続フォームに入力する場合も、信頼できる自分のPC上でローカルサーバーを起動していることを確認してください。
-
-## Yahoo!接続仕様
-
-- IMAP: `imap.mail.yahoo.co.jp:993`（TLS）
-- SMTP: `smtp.mail.yahoo.co.jp:465`（TLS）
-- 認証: Yahoo! JAPAN ID / シークレットID とメール用パスワード
-
-サーバー設定はYahoo!公式ヘルプに基づきます。Yahoo!側の仕様変更やアカウント状態によって接続できない場合があります。
+## 含まれるファイル
+- `index.html` / `styles.css` / `app.js`: Web画面
+- `manifest.webmanifest`: PWAメタデータ
+- `server.js`: ローカル開発用Yahoo! IMAP/SMTPバックエンド
+- `package.json`: Node.js依存関係
+- `.env.example`: 環境変数の例
