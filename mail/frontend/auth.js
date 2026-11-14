@@ -10,10 +10,9 @@ import {
   updateProfile
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
-const host = window.location.hostname || 'localhost';
 const firebaseConfig = {
   apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8',
-  authDomain: host === 'localhost' ? 'koyomi-96cd7.firebaseapp.com' : host,
+  authDomain: 'koyomi-96cd7.firebaseapp.com',
   projectId: 'koyomi-96cd7',
   storageBucket: 'koyomi-96cd7.firebasestorage.app',
   messagingSenderId: '237812391840',
@@ -113,4 +112,3 @@ onAuthStateChanged(auth, async user=>{
     window.dispatchEvent(new CustomEvent('mailbox-auth-changed',{detail:{user:null}}));
   }
 });
-
