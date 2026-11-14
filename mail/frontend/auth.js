@@ -6,13 +6,14 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.3.0/firebas
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification,
-  signOut, GoogleAuthProvider, OAuthProvider, signInWithRedirect,
-  getRedirectResult, updateProfile
+  signOut, GoogleAuthProvider, OAuthProvider, signInWithPopup,
+  updateProfile
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
+const host = window.location.hostname || 'localhost';
 const firebaseConfig = {
   apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8',
-  authDomain: 'koyomi-96cd7.firebaseapp.com',
+  authDomain: host === 'localhost' ? 'koyomi-96cd7.firebaseapp.com' : host,
   projectId: 'koyomi-96cd7',
   storageBucket: 'koyomi-96cd7.firebasestorage.app',
   messagingSenderId: '237812391840',
@@ -62,7 +63,9 @@ const errorText = (e) => ({
   'auth/weak-password':'パスワードは6文字以上にしてください。',
   'auth/too-many-requests':'試行回数が多すぎます。しばらくしてからお試しください。',
   'auth/popup-blocked':'ログイン画面が開けませんでした。もう一度お試しください。',
-  'auth/operation-not-allowed':'このログイン方法はFirebase側でまだ有効になっていません。'
+  'auth/operation-not-allowed':'このログイン方法はFirebase側でまだ有効になっていません。',
+  'auth/unauthorized-domain':'このサイトはFirebaseの認証ドメインに追加されていません。Firebase Console の Authorized domains を確認してください。',
+  'auth/invalid-domain':'認証ドメインが正しく設定されていません。Firebase Console の Authorized domains を確認してください。'
 }[e.code] || `認証エラー: ${e.message || e.code || '不明なエラー'}`);
 function status(message, bad=true){const el=$('#mb-auth-message',gate);if(el){el.textContent=message;el.style.color=bad?'#a04444':'#34734d';}}
 function setBusy(b){gate.querySelectorAll('button').forEach(x=>x.disabled=b);}
@@ -71,15 +74,30 @@ function email(){return $('#mb-auth-email',gate).value.trim()}
 function password(){return $('#mb-auth-password',gate).value}
 
 $('#mb-login',gate).onclick=()=>run(async()=>{await signInWithEmailAndPassword(auth,email(),password())});
-$('#mb-signup',gate).onclick=()=>run(async()=>{const c=await createUserWithEmailAndPassword(auth,email(),password());await sendEmailVerification(c.user);status('登録しました。確認メールを確認してください。',false)});
+$('#mb-signup',gate).onclick=()=>run(async()=>{const c=await createUserWithEmailAndPassword(auth,email(),password());await sendEmailVerification(c.user);status('登録しました。確認メールをご確認ください。',false)});
 $('#mb-reset',gate).onclick=()=>run(async()=>{if(!email())throw new Error('先にメールアドレスを入力してください。');await sendPasswordResetEmail(auth,email());status('パスワード再設定メールを送信しました。',false)});
-async function providerRedirect(provider){await signInWithRedirect(auth,provider)}
-$('#mb-google',gate).onclick=()=>run(()=>providerRedirect(new GoogleAuthProvider()));
-$('#mb-microsoft',gate).onclick=()=>run(()=>providerRedirect(new OAuthProvider('microsoft.com')));
-const apple = new OAuthProvider('apple.com'); apple.addScope('email'); apple.addScope('name');
-$('#mb-apple',gate).onclick=()=>run(()=>providerRedirect(apple));
 
-getRedirectResult(auth).catch(e=>status(errorText(e)));
+async function providerPopup(provider, label='外部アカウント'){
+  const result = await signInWithPopup(auth, provider);
+  status(`${label}でログインしました。`, false);
+  return result;
+}
+
+const google = new GoogleAuthProvider();
+google.setCustomParameters({ prompt: 'select_account' });
+$('#mb-google',gate).onclick=()=>run(()=>providerPopup(google, 'Google'));
+
+$('#mb-microsoft',gate).onclick=()=>run(()=>{
+  const provider = new OAuthProvider('microsoft.com');
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return providerPopup(provider, 'Microsoft');
+});
+
+const apple = new OAuthProvider('apple.com');
+apple.addScope('email');
+apple.addScope('name');
+$('#mb-apple',gate).onclick=()=>run(()=>providerPopup(apple, 'Apple'));
+
 let logout=document.createElement('button');logout.id='mailbox-auth-logout';logout.textContent='ログアウト';logout.className='hidden';logout.onclick=()=>run(()=>signOut(auth));
 document.addEventListener('DOMContentLoaded',()=>document.body.append(logout));
 
@@ -95,3 +113,4 @@ onAuthStateChanged(auth, async user=>{
     window.dispatchEvent(new CustomEvent('mailbox-auth-changed',{detail:{user:null}}));
   }
 });
+
