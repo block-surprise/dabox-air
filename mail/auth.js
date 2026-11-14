@@ -11,7 +11,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1t8',
+  apiKey: 'AIzaSyBfwon4kiCkBc2KMnzH82viNWkRM5E1tP8',
   authDomain: 'koyomi-96cd7.firebaseapp.com',
   projectId: 'koyomi-96cd7',
   storageBucket: 'koyomi-96cd7.firebasestorage.app',
